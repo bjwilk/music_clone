@@ -10,18 +10,19 @@ function AddProducts() {
   const { album_id } = useParams();
   const user = useSelector((state) => state.session.user);
 
+
   const [errors, setErrors] = useState({});
   const [productTypes, setProductTypes] = useState([
-    { type: "CD", price: "", amount: "" },
+    { type: "", price: "", amount: "" },
   ]);
 
   const updateProductType = (index, field, value) => {
     const updatedProductTypes = [...productTypes];
 
     if (field === 'amount') {
-      updatedProductTypes[index][field] = parseInt(value, 10);
+      updatedProductTypes[index][field] = value;
     } else if (field === 'price') {
-      updatedProductTypes[index][field] = parseFloat(value);
+      updatedProductTypes[index][field] = value;
     } else {
       updatedProductTypes[index][field] = value;
     }
@@ -43,6 +44,12 @@ function AddProducts() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
+
+      // Check if there are no products
+      if (productTypes.length === 0) {
+        setErrors({ form: 'You must have at least one product type.' });
+        return;
+      }
 
     const newErrors = {};
 
@@ -67,8 +74,8 @@ function AddProducts() {
     // Prepare the product types data from state
     const formattedProductTypes = productTypes.map((pt) => ({
       type: pt.type,
-      price: pt.price,
-      amount: pt.amount,
+      price: parseFloat(pt.price), // Use parseFloat to allow decimal values
+      amount: parseInt(pt.amount, 10),
     }));
 
     const payload = {
@@ -148,7 +155,7 @@ function AddProducts() {
             </button>
           </div>
           {errors.general && <p className="error">{errors.general}</p>}
-        </form>
+          {errors.form && <p className="error">{errors.form}</p>}        </form>
       </section>
     </>
   );

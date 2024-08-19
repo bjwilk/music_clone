@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchCurrUserAlbums, fetchUpdateProducts } from "../../redux/albumReducer";
+import "./UpdateProducts.css"
 
 function UpdateProducts() {
   const dispatch = useDispatch();
@@ -20,7 +21,7 @@ function UpdateProducts() {
         price: product.price,
         amount: product.amount,
       }))
-    : [{ type: "CD", price: "", amount: "" }];
+    : [{ type: "", price: "", amount: "" }];
 
   const [errors, setErrors] = useState({});
   const [productTypes, setProductTypes] = useState(initialProductTypes);
@@ -33,11 +34,11 @@ function UpdateProducts() {
 
   const updateProductType = (index, field, value) => {
     const updatedProductTypes = [...productTypes];
-
+console.log('UpdateFunc', value)
     if (field === 'amount') {
-      updatedProductTypes[index][field] = parseInt(value, 10);
+      updatedProductTypes[index][field] = value;
     } else if (field === 'price') {
-      updatedProductTypes[index][field] = parseFloat(value);
+      updatedProductTypes[index][field] = value;
     } else {
       updatedProductTypes[index][field] = value;
     }
@@ -60,7 +61,26 @@ function UpdateProducts() {
     e.preventDefault();
     setErrors({});
 
+    // Check if there are no products
+    if (productTypes.length === 0) {
+      setErrors({ form: 'You must have at least one product type.' });
+      return;
+    }
+
     const newErrors = {};
+
+    // Validate each product type
+    productTypes.forEach((productType, index) => {
+      if (!productType.type) {
+        newErrors[`type-${index}`] = "Product type is required";
+      }
+      if (!productType.price || productType.price <= 0) {
+        newErrors[`price-${index}`] = "Price must be a positive number";
+      }
+      if (!productType.amount || productType.amount <= 0) {
+        newErrors[`amount-${index}`] = "Quantity must be a positive number";
+      }
+    });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -70,23 +90,24 @@ function UpdateProducts() {
     // Prepare the product types data from state
     const formattedProductTypes = productTypes.map((pt) => ({
       type: pt.type,
-      price: pt.price,
-      amount: pt.amount,
+      price: parseFloat(pt.price), // Use parseFloat to allow decimal values
+      amount: parseInt(pt.amount, 10),
     }));
 
     const payload = {
       album_id: parseInt(album_id),
       product_types: formattedProductTypes, // Include product types in the payload
     };
-    // console.log(payload)
-    let newProducts;
+
+    console.log("Payload", payload)
     try {
-      newProducts = await dispatch(fetchUpdateProducts(payload.album_id, payload));
-
-          navigate(`/albums/${album_id}`);
-
+     const newProducts = await dispatch(fetchUpdateProducts(payload.album_id, payload));
+     if (!newErrors.length > 0) {
+        navigate(`/albums/${album_id}`);
+      }
     } catch (err) {
       console.error({ err });
+      setErrors({ form: 'An error occurred while updating the products. Please try again.' });
     }
   };
 
@@ -109,11 +130,13 @@ function UpdateProducts() {
                 }
                 className="input-field"
               >
+                <option value="">Select Product Type</option>
                 <option value="CD">CD</option>
                 <option value="Vinyl">Vinyl</option>
                 <option value="Cassette">Cassette</option>
                 <option value="Digital">Digital</option>
               </select>
+              {errors[`type-${index}`] && <p className="error">{errors[`type-${index}`]}</p>}
               <span>$</span>
               <input
                 value={productType.price}
@@ -123,6 +146,8 @@ function UpdateProducts() {
                 placeholder="Price"
                 className="input-field"
               />
+                {errors[`price-${index}`] && <p className="error">{errors[`price-${index}`]}</p>}
+
               <input
                 value={productType.amount}
                 onChange={(e) =>
@@ -131,6 +156,8 @@ function UpdateProducts() {
                 placeholder="Quantity"
                 className="input-field"
               />
+               {errors[`amount-${index}`] && <p className="error">{errors[`amount-${index}`]}</p>}
+
               <button type="button" onClick={() => removeProductType(index)}>
                 Remove
               </button>
@@ -145,6 +172,7 @@ function UpdateProducts() {
               {"Update Products"}
             </button>
           </div>
+          {errors.form && <p className="error">{errors.form}</p>}
         </form>
       </section>
     </>
