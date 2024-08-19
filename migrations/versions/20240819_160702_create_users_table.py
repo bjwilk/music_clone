@@ -1,8 +1,8 @@
-"""empty message
+"""create users table
 
-Revision ID: 0af19d6d8c25
-Revises:
-Create Date: 2024-08-18 22:59:56.930308
+Revision ID: fc8c0d3f95ce
+Revises: 
+Create Date: 2024-08-19 16:07:02.772833
 
 """
 from alembic import op
@@ -12,9 +12,8 @@ import os
 environment = os.getenv("FLASK_ENV")
 SCHEMA = os.environ.get("SCHEMA")
 
-
 # revision identifiers, used by Alembic.
-revision = '0af19d6d8c25'
+revision = 'fc8c0d3f95ce'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -65,7 +64,6 @@ def upgrade():
     )
     if environment == "production":
         op.execute(f"ALTER TABLE albums SET SCHEMA {SCHEMA};")
-
     op.create_table('product_types',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('album_id', sa.Integer(), nullable=False),
@@ -125,7 +123,7 @@ def upgrade():
     )
     if environment == "production":
         op.execute(f"ALTER TABLE tracks SET SCHEMA {SCHEMA};")
-
+        
     op.create_table('wishlist_items',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
